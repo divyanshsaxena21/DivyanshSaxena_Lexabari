@@ -18,11 +18,17 @@ function App() {
 
       const results = res.data.results || [];
 
-      const answer = results.length > 0
-        ? results.map((r, i) => `${i + 1}. ${r.text} (source: ${r.source}, score: ${typeof r.score === 'number' ? r.score.toFixed(3) : r.score})`).join("\n\n")
-        : "No results found.";
+      // Confidence threshold (read from Vite env; default 0.12)
+      const CONF_THRESHOLD = parseFloat(import.meta.env.VITE_CONFIDENCE_THRESHOLD ?? '0.12');
 
-      const sources = results.map(r => r.source);
+      // Only keep results that have a numeric score and meet the threshold
+      const filtered = results.filter(r => typeof r.score === 'number' && r.score >= CONF_THRESHOLD);
+
+      const answer = filtered.length > 0
+        ? filtered.map((r, i) => `${i + 1}. ${r.text} (source: ${r.source}, score: ${r.score.toFixed(3)})`).join("\n\n")
+        : "No high-confidence results found.";
+
+      const sources = filtered.map(r => r.source);
 
       setMessages([
         ...messages,
